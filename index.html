@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List Web Service</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        /* Task List Styles */
+        .task {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 6px solid #007bff;
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease;
+        }
+
+        .task:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+
+        /* Delete Button Styles */
+        .delete-btn {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Add New Task Form Styles */
+        .task-form {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .task-form input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+
+        .task-form button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .task-form button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media only screen and (max-width: 600px) {
+            .task-form input[type="text"] {
+                width: 60%;
+            }
+
+            .task-form button {
+                width: 35%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Task List</h1>
+
+        <!-- Form to add new task -->
+        <div class="task-form">
+            <input type="text" id="newTask" placeholder="Enter task title">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <!-- Tasks will be displayed here -->
+        <div id="tasks"></div>
+    </div>
+
+    <script>
+        // Fetch and display tasks
+        function loadTasks() {
+            fetch('api/read.php')
+                .then(response => response.json())
+                .then(data => {
+                    const tasksDiv = document.getElementById('tasks');
+                    tasksDiv.innerHTML = ''; // Clear existing tasks
+                    data.forEach(task => {
+                        tasksDiv.innerHTML += `
+                            <div class="task" id="task-${task.id}">
+                                <div>
+                                    <p class="task-title">${task.title}</p>
+                                    <p>${task.description}</p>
+                                </div>
+                                <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                            </div>`;
+                    });
+                });
+        }
+
+        // Add new task
+        function addTask() {
+            const newTask = document.getElementById('newTask').value;
+            if (newTask) {
+                fetch('api/create.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: newTask })
+                }).then(() => {
+                    loadTasks();
+                    document.getElementById('newTask').value = '';
+                });
+            } else {
+                alert("Please enter a task title");
+            }
+        }
+
+        // Delete task
+        function deleteTask(id) {
+            if (confirm("Are you sure you want to delete this task?")) {
+                fetch('api/delete.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id })
+                }).then(() => {
+                    document.getElementById(`task-${id}`).remove();
+                });
+            }
+        }
+
+        // Load tasks initially
+        loadTasks();
+    </script>
+</body>
+</html>
